@@ -19,27 +19,41 @@ mp = os.path.join('weights', 'resnet50.pth')
 dp = os.path.join('data')
 s = Search(mp, dp, False)
 
-# load input image
-x = cv2.imread(args.image) / 255.0
-x = utils.image_to_tensor(x)
-x = x.type(torch.FloatTensor)
 
-# search
-res = s(x, args.top)
+def search(image_name: str):
+    # load input image
+    x = cv2.imread(image_name) / 255.0
+    x = utils.image_to_tensor(x)
+    x = x.type(torch.FloatTensor)
 
-# show input
-x = cv2.imread(args.image)
-cv2.imshow('input', x)
+    # search operation
+    res = s(x, args.top)
 
-# show search result
-res = tqdm(res)
-for id_, sim in res:
-    t = 'id:{} similarity:{:.04f}'.format(id_, sim)
-    res.set_description(t)
-    p = os.path.join('data', 'image', '{}.jpg'.format(id_))
-    y = cv2.imread(p)
-    t = t.split(' ')
-    cv2.putText(y, t[0], (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-    cv2.putText(y, t[1], (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-    cv2.imshow('similar', y)
-    cv2.waitKey()
+    # show input
+    x = cv2.imread(image_name)
+    cv2.imshow('input', x)
+
+    # show search result
+    res = tqdm(res)
+    for id_, sim in res:
+        t = 'id:{} similarity:{:.04f}'.format(id_, sim)
+        res.set_description(t)
+        p = os.path.join('data', 'image', '{}.jpg'.format(id_))
+        y = cv2.imread(p)
+        t = t.split(' ')
+        cv2.putText(y, t[0], (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        cv2.putText(y, t[1], (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        cv2.imshow('similar', y)
+        cv2.waitKey()
+    cv2.destroyAllWindows()
+
+
+if __name__ == '__main__':
+    if args.image:
+        print('Single search mode')
+        search(args.image)
+    else:
+        print('Multi search mode')
+        while True:
+            image_name = input('Search: ')
+            search(image_name)
