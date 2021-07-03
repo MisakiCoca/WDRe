@@ -8,21 +8,25 @@ from torch import Tensor
 
 
 class Image:
-    def __init__(self, root: str, id_: str, load_image: bool = True, load_feather: bool = True, use_cuda: bool = True):
+    """
+    Single image with raw jpg and feather
+    """
+    def __init__(self, root: str, id_: str, load_image: bool = True, load_feather: bool = True):
 
+        # set parameters
         self.root = root
         self.id = id_
 
         # load image
         image = self.load_image() if load_image else None
-        if load_image and use_cuda:
-            image.cuda()
+        if load_image and torch.cuda.is_available():
+            image = image.cuda()
         self.image = image
 
         # load feather
         feather = self.load_feather() if load_feather else None
-        if load_feather and use_cuda:
-            feather.cuda()
+        if load_feather and torch.cuda.is_available():
+            feather = feather.cuda()
         self.feather = feather
 
     def load_image(self) -> Tensor:
