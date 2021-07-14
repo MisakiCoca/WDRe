@@ -9,8 +9,7 @@ class MoCo(nn.Module):
     Based on official DistributedDataParallel version.
     https://arxiv.org/abs/1911.05722
     """
-
-    def __init__(self, base_encoder, dim=128, k=65536, m=0.999, t=0.07):
+    def __init__(self, base_encoder, dim=128, k=65536, m=0.999, t=0.07, mlp=True):
         """
         :param dim: feature dimension (default: 128)
         :param k: queue size, number of negative keys (default: 65536)
@@ -27,15 +26,13 @@ class MoCo(nn.Module):
         self.encoder_k = base_encoder(num_classes=dim)
 
         # replace the final fully connected layer
-        dim_mlp = self.encoder_q.fc.weight.shape[1]
-        self.encoder_q.fc = nn.Sequential(nn.Linear(dim_mlp, dim_mlp),
-                                          nn.ReLU(), self.encoder_q.fc)
-        self.encoder_k.fc = nn.Sequential(nn.Linear(dim_mlp, dim_mlp),
-                                          nn.ReLU(), self.encoder_k.fc)
+        if mlp:
+            dim_mlp = self.encoder_q.fc.weight.shape[1]
+            self.encoder_q.fc = nn.Sequential(nn.Linear(dim_mlp, dim_mlp), nn.ReLU(), self.encoder_q.fc)
+            self.encoder_k.fc = nn.Sequential(nn.Linear(dim_mlp, dim_mlp), nn.ReLU(), self.encoder_k.fc)
 
         # initialize encoder_k parameters with no grad
-        for param_q, param_k in zip(self.encoder_q.parameters(),
-                                    self.encoder_k.parameters()):
+        for param_q, param_k in zip(self.encoder_q.parameters(), self.encoder_k.parameters()):
             param_k.data.copy_(param_q.data)
             param_k.requires_grad = False
 
@@ -50,8 +47,7 @@ class MoCo(nn.Module):
         """
         Momentum update of the key encoder
         """
-        for param_q, param_k in zip(self.encoder_q.parameters(),
-                                    self.encoder_k.parameters()):
+        for param_q, param_k in zip(self.encoder_q.parameters(), self.encoder_k.parameters()):
             param_k.data = param_k.data * self.m + param_q.data * (1. - self.m)
 
     @torch.no_grad()

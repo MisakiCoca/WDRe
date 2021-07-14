@@ -11,12 +11,12 @@ class SearchNet(nn.Module):
     """
     Image search pipeline
     """
-    def __init__(self, model_path: str, data_root: str):
+    def __init__(self, model_arch: str, data_root: str):
         super(SearchNet, self).__init__()
 
         # load pretrained model
         print('loading pretrained model')
-        net = RetrievalNet(model_path)
+        net = RetrievalNet(model_arch)
         self.net = net
 
         # load precalculated image set

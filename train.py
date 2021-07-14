@@ -3,6 +3,7 @@ import math
 import os
 import shutil
 
+import numpy as np
 import torch.backends.cudnn
 import torch.cuda
 import torch.utils.data
@@ -36,7 +37,7 @@ parser.add_argument('--print_freq', default=10, type=int, help='print frequency'
 
 # moco specific
 parser.add_argument('--moco_dim', default=128, type=int, help='feature dimension')
-parser.add_argument('--moco_k', default=2560, type=int, help='queue size; number of negative keys')
+parser.add_argument('--moco_k', default=1024, type=int, help='queue size; number of negative keys')
 parser.add_argument('--moco_m', default=0.999, type=float, help='moco momentum of updating key encoder')
 parser.add_argument('--moco_t', default=0.2, type=float, help='softmax temperature')
 
@@ -55,7 +56,8 @@ def main():
 
     # create model
     print(f'creating model {args.arch}')
-    model = MoCo(torchvision.models.__dict__[args.arch], args.moco_dim, args.moco_k, args.moco_m, args.moco_t)
+    model = MoCo(torchvision.models.__dict__[args.arch], args.moco_dim, args.moco_k, args.moco_m, args.moco_t, 'resnet'
+                 in args.arch)
     print(model)
 
     # make model data parallel
@@ -126,6 +128,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
     loader = tqdm(train_loader)
 
     # run one epoch
+    rec_loss = []
     for [im_q, im_k], _ in loader:
         # move imgs to cuda
         im_q = im_q.cuda(non_blocking=True)
@@ -141,7 +144,8 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
         optimizer.step()
 
         # update process bar
-        loader.set_description(f'epoch: [{epoch}/{args.epochs}] loss:{loss.item():.2f}')
+        rec_loss.append(loss.item())
+        loader.set_description(f'epoch: [{epoch}/{args.epochs}] loss:{np.mean(rec_loss): .2f} ({loss.item(): .2f})')
 
 
 def adjust_learning_rate(optimizer, epoch, args):

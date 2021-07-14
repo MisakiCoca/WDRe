@@ -20,7 +20,9 @@ def init_args():
     parser.add_argument('--image', help='input image path')
     parser.add_argument('--top', type=int, help='search top num', default=20)
     parser.add_argument('--data_root', help='data root path', default='data')
-    parser.add_argument('--cp', help='resnet18 checkpoint', default=os.path.join('weights', 'resnet18.pth'))
+    parser.add_argument('--arch', help='network architecture', default='resnet18')
+    parser.add_argument('--cp_final', help='moco checkpoint', default=os.path.join('cache', 'cp_final.pth'))
+    parser.add_argument('--skip_check', help='skip feather bank check', action='store_true')
 
     args = parser.parse_args()
     return args
@@ -31,21 +33,22 @@ def check_pre(args):
     inspection preparation
     """
 
-    # check resnet18 model
-    resnet18_checkpoint = args.cp
-    if not os.path.exists(resnet18_checkpoint):
-        moco_checkpoint = os.path.join('cache', 'cp_final.pth')
-        model_transform(moco_checkpoint, resnet18_checkpoint)
+    # check search model
+    checkpoint = os.path.join('weights', f'{args.arch}.pth')
+    if not os.path.exists(checkpoint):
+        moco_checkpoint = args.cp_final
+        model_transform(moco_checkpoint, checkpoint)
 
     # check feather bank
-    check_feather_bank(resnet18_checkpoint, args.data_root)
+    if not args.skip_check:
+        check_feather_bank(checkpoint, args.data_root)
 
 
 def load_model(args):
     """
     load search net
     """
-    s = SearchNet(args.cp, args.data_root)
+    s = SearchNet(args.arch, args.data_root)
     return s
 
 
@@ -74,8 +77,8 @@ def search(search_net, image_name, args):
         p = os.path.join('data', 'image', '{}.jpg'.format(id_))
         y = cv2.imread(p)
         t = t.split(' ')
-        cv2.putText(y, t[0], (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-        cv2.putText(y, t[1], (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        cv2.putText(y, t[0], (10, 40), cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.5, (0, 0, 255), 2)
+        cv2.putText(y, t[1], (10, 80), cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.5, (0, 0, 255), 2)
         cv2.imshow('similar', y)
         cv2.waitKey()
     cv2.destroyAllWindows()
