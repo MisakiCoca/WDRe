@@ -7,20 +7,23 @@ from models.image_set import ImageSet
 from models.retrieval_net import RetrievalNet
 
 
-def check_feather_bank(model_path, data_root):
+def check_feather_bank(arch, data_root):
     """
     Check the integrity of the feather bank.
     If missing, compute images and save their feather.
     """
 
     # start check feather bank
-    print('checking feather bank')
+    print(f'checking {arch} feather bank')
+    folder = os.path.join(data_root, f'feather_{arch}')
+    if not os.path.exists(folder):
+        os.makedirs(folder)
 
-    # load resnet18 model
-    net = RetrievalNet(model_path)
+    # lazy load search model
+    net = RetrievalNet(arch)
 
     # load image set without feather
-    image_set = ImageSet(root=data_root, load_image=True, load_feather=False)
+    image_set = ImageSet(root=data_root, load_image=True, load_feather=False, arch=arch)
     loader = tqdm(image_set)
 
     # check for the presence of feathers
@@ -28,7 +31,7 @@ def check_feather_bank(model_path, data_root):
         loader.set_description(f'checking ID: {image.id}')
 
         # if missing, compute
-        if not os.path.exists(os.path.join(data_root, 'feather', f'{image.id}.npy')):
+        if not os.path.exists(os.path.join(data_root, f'feather_{arch}', f'{image.id}.npy')):
             loader.set_description(f'generating ID: {image.id}')
             with torch.no_grad():
                 f = net(image.image.unsqueeze(0))
@@ -36,4 +39,4 @@ def check_feather_bank(model_path, data_root):
                 image.save_feather()
 
     # feather bank check over
-    print('feather bank is ready')
+    print(f'{arch} feather bank is ready')

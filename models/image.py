@@ -11,11 +11,12 @@ class Image:
     """
     Single image with raw jpg and feather
     """
-    def __init__(self, root: str, id_: str, load_image: bool = True, load_feather: bool = True):
+    def __init__(self, root: str, id_: str, load_image: bool = True, load_feather: bool = True, arch: str = 'resnet18'):
 
         # set parameters
         self.root = root
         self.id = id_
+        self.arch = arch
 
         # load image
         image = self.load_image() if load_image else None
@@ -38,12 +39,12 @@ class Image:
         return x
 
     def load_feather(self) -> Tensor:
-        p = os.path.join(self.root, 'feather', '{}.npy'.format(self.id))
+        p = os.path.join(self.root, f'feather_{self.arch}', '{}.npy'.format(self.id))
         f = np.load(p)
         f = torch.from_numpy(f)
         return f
 
     def save_feather(self):
-        p = os.path.join(self.root, 'feather', '{}.npy'.format(self.id))
+        p = os.path.join(self.root, f'feather_{self.arch}', '{}.npy'.format(self.id))
         f = self.feather.numpy()
         np.save(p, f)

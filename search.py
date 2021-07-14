@@ -1,5 +1,6 @@
 import argparse
 import os
+import warnings
 
 import cv2
 import kornia.utils as utils
@@ -9,6 +10,8 @@ from tqdm import tqdm
 from models.search_net import SearchNet
 from tools.check_feather_bank import check_feather_bank
 from tools.model_transform import model_transform
+
+warnings.filterwarnings('ignore')
 
 
 def init_args():
@@ -34,14 +37,14 @@ def check_pre(args):
     """
 
     # check search model
-    checkpoint = os.path.join('weights', f'{args.arch}.pth')
-    if not os.path.exists(checkpoint):
+    model_path = os.path.join('weights', f'{args.arch}.pth')
+    if not os.path.exists(model_path):
         moco_checkpoint = args.cp_final
-        model_transform(moco_checkpoint, checkpoint)
+        model_transform(moco_checkpoint, args.arch)
 
     # check feather bank
     if not args.skip_check:
-        check_feather_bank(checkpoint, args.data_root)
+        check_feather_bank(args.arch, args.data_root)
 
 
 def load_model(args):

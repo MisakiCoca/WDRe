@@ -1,3 +1,5 @@
+import os
+
 import torch
 import torch.nn as nn
 import torchvision.models.resnet
@@ -8,27 +10,26 @@ class RetrievalNet(nn.Module):
     """
     Encoder for retrieval image
     """
-    def __init__(self, model_arch: str):
+    def __init__(self, arch: str):
         super(RetrievalNet, self).__init__()
-        self.model_arch = model_arch
+        self.arch = arch
         self.model = self.load_model()
 
     def load_model(self):
         """
-        load resnet18 model
+        load search model
         """
 
         # init model architecture
-        if self.model_arch == 'resnet18':
-            model = torchvision.models.resnet18(num_classes=128)
+        model = torchvision.models.__dict__[self.arch](num_classes=128)
+        if self.arch == 'resnet18':
             dim_mlp = model.fc.weight.shape[1]
             model.fc = nn.Sequential(nn.Linear(dim_mlp, dim_mlp), nn.ReLU(), model.fc)
-        else:
-            model = torchvision.models.densenet121(num_classes=128)
 
         # load model state dict
-        print(self.model_arch)
-        cp = torch.load(self.model_arch, map_location='cpu')
+        print(f'loading {self.arch} parameters')
+        model_path = os.path.join('weights', f'{self.arch}.pth')
+        cp = torch.load(model_path, map_location='cpu')
         model.load_state_dict(cp)
 
         # if available, move model to gpu

@@ -11,23 +11,23 @@ class SearchNet(nn.Module):
     """
     Image search pipeline
     """
-    def __init__(self, model_arch: str, data_root: str):
+    def __init__(self, arch: str, data_root: str):
         super(SearchNet, self).__init__()
 
         # load pretrained model
-        print('loading pretrained model')
-        net = RetrievalNet(model_arch)
+        print(f'loading pretrained {arch} model')
+        net = RetrievalNet(arch)
         self.net = net
 
         # load precalculated image set
-        print('loading precalculated image set')
-        image_list = ImageSet(data_root, False, True)
+        print(f'loading precalculated {arch} image set')
+        image_list = ImageSet(data_root, False, True, arch)
         image_set = []
         _ = [image_set.append(image) for image in image_list]
         self.image_set = image_set
 
         # ready for search
-        print('ready for search')
+        print(f'{arch} ready for search')
 
     def forward(self, image: Tensor, top_num: int = 100):
         """
