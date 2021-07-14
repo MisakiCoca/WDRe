@@ -4,6 +4,7 @@ import warnings
 
 import cv2
 import kornia.utils as utils
+import numpy
 import torch
 from tqdm import tqdm
 
@@ -60,6 +61,11 @@ def search(search_net, image_name, args):
     search one image with image name
     """
 
+    # check file
+    if not os.path.basename(image_name).split('.')[-1] in ['jpg', 'bmp', 'png']:
+        print('only support jpg bmp and png')
+        return
+
     # load input image
     x = cv2.imread(image_name) / 255.0
     x = utils.image_to_tensor(x)
@@ -72,18 +78,27 @@ def search(search_net, image_name, args):
     x = cv2.imread(image_name)
     cv2.imshow('input', x)
 
-    # show search result
+    # mark search result
+    im_queue = []
     res = tqdm(res)
     for id_, sim in res:
-        t = 'id:{} similarity:{:.04f}'.format(id_, sim)
+        t = 'id:{} sim:{:.04f}'.format(id_, sim)
         res.set_description(t)
         p = os.path.join('data', 'image', '{}.jpg'.format(id_))
         y = cv2.imread(p)
         t = t.split(' ')
-        cv2.putText(y, t[0], (10, 40), cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.5, (0, 0, 255), 2)
-        cv2.putText(y, t[1], (10, 80), cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.5, (0, 0, 255), 2)
-        cv2.imshow('similar', y)
-        cv2.waitKey()
+        y = cv2.copyMakeBorder(y, 1, 1, 1, 1, cv2.BORDER_DEFAULT, value=0)
+        cv2.putText(y, t[0], (10, 40), cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.5, (0, 0, 255), 1)
+        cv2.putText(y, t[1], (10, 80), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 0, 255), 1)
+        im_queue.append(y)
+
+    # arrange im_queue in one picture with (5 * n)
+    rows = numpy.array_split(im_queue, len(im_queue) // 5)
+    cols = [numpy.hstack(row) for row in rows]
+    pic = numpy.vstack(cols)
+    cv2.imshow('pic', pic)
+    cv2.waitKey()
+
     cv2.destroyAllWindows()
 
 
